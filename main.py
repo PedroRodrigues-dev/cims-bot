@@ -1,8 +1,10 @@
-from threading import Thread
+import threading
+from tools import keepAlive
 from configs import discord
 
 
 def main():
+    threading.Thread(target=keepAlive.init).start()
     discord.run()
 
 

@@ -1,21 +1,31 @@
 version: "3.2"
 
 services:
-  cims:
-    image: cims-bot:latest
-    container_name: cims-bot
-    environment:
-      - CIMS_BOT_DISCORD_TOKEN=MTA4NzUyOTkzNzEzMDUwNDI3Mg.GGkyl3.VOBdcX3R_dH_YIfeOXjCyVGv6vxm-jwqmPdVDE
+  # cims:
+  #   image: cims-bot:latest
+  #   container_name: cims-bot
+  #   environment:
+  #     - CIMS_BOT_DISCORD_TOKEN=MTA4NzUyOTkzNzEzMDUwNDI3Mg.GGkyl3.VOBdcX3R_dH_YIfeOXjCyVGv6vxm-jwqmPdVDE
 
   rabbitmq:
     image: rabbitmq:3.11.10-management-alpine
-    container_name: "cims-rabbitmq"
+    container_name: cims-rabbitmq
     ports:
       - 5672:5672
       - 15672:15672
+    restart: always
     networks:
-      - rabbitmq
+      - cims
+
+  redis:
+    image: redis:7.2-rc-bullseye
+    container_name: cims-redis
+    ports:
+      - 6379:6379
+    restart: always
+    networks:
+      - cims
 
 networks:
-  rabbitmq:
+  cims:
     driver: bridge
