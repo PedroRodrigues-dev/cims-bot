@@ -1,9 +1,9 @@
 import json
 import threading
 from time import sleep
-from configs import rabbit, redis
+from configs import rabbit
 from datetime import datetime
-from tools import serverStatus, servers, alerts
+from tools import serverStatus, servers, alerts, channels
 
 
 lastVerificationTimes = {}
@@ -34,7 +34,8 @@ def queueReciver():
 
         if serverStatus.get(body["serverName"]) == None or serverStatus.get(body["serverName"]).decode() != body["status"]:
             serverStatus.set(body["serverName"], body["status"])
-            alerts.send(f'{body["serverName"]} ({body["status"]})')
+            if channels.getAlert():
+                alerts.send(f'{body["serverName"]} ({body["status"]})')
 
         lastVerificationTimes[body["serverName"]] = datetime.now()
 
@@ -51,7 +52,8 @@ def onlineTimeValidation():
             ).total_seconds() >= 5:
                 if serverStatus.get(serverName).decode() != "offline":
                     serverStatus.set(serverName, "offline")
-                    alerts.send(f'{serverName} (offline)')
+                    if channels.getAlert():
+                        alerts.send(f'{serverName} (offline)')
 
 
         for serverName in servers.getNames():
