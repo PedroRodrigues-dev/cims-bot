@@ -27,3 +27,8 @@ def getList():
     )
 
     return result
+
+def getNames():
+    keys = redis.getKeys("server::status::*")
+    result = [key.decode().replace("server::status::", "") for key in keys]
+    return result

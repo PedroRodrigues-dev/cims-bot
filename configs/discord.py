@@ -28,7 +28,12 @@ async def on_message(message):
         return
 
     if message.content == "#servers-status":
-        await message.channel.send(servers.getList())
+        serversList = servers.getList()
+
+        if serversList:
+            await message.channel.send(serversList)
+        else:
+            await message.channel.send("no server registered")
 
         return
 

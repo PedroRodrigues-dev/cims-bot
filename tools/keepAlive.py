@@ -49,7 +49,7 @@ def onlineTimeValidation():
             ).total_seconds() >= 5:
                 serverStatus.set(serverName, "offline")
 
-        for serverName in servers.getList():
+        for serverName in servers.getNames():
             if serverName not in lastVerificationTimes:
                 lastVerificationTimes[serverName] = datetime.now()
 
