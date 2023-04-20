@@ -1,3 +1,4 @@
+import asyncio
 import discord
 from configs import rabbit
 from configs.environment import discordToken
@@ -10,9 +11,39 @@ intents.message_content = True
 client = discord.Client(intents=intents)
 
 
+async def alert():
+    while 1:
+        alertChannelId = channels.getAlert()
+
+        if alertChannelId:
+            alertChannel = client.get_channel(int(alertChannelId.decode()))
+
+            connection = rabbit.connect()
+
+            queueName = 'alerts'
+
+            channel = connection.channel()
+
+            channel.queue_declare(queue=queueName, durable=True)
+
+            method_frame, header_frame, body = channel.basic_get(queueName, auto_ack=False)
+
+            if method_frame:
+                await alertChannel.send(body.decode())
+
+                channel.basic_ack(method_frame.delivery_tag)
+
+            connection.close()
+
+
+        await asyncio.sleep(2)
+
+
 @client.event
 async def on_ready():
     print(f"We have logged in as {client.user}")
+
+    client.loop.create_task(alert())
 
     alertChannelId = channels.getAlert()
 
