@@ -1,9 +1,8 @@
 import asyncio
 import discord
-from configs import rabbit
 from configs.environment import discordToken
-from tools import servers, channels
-import json
+from tools import servers, channels, alerts
+from tools.queues import bot, server
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -18,23 +17,10 @@ async def alert():
         if alertChannelId:
             alertChannel = client.get_channel(int(alertChannelId.decode()))
 
-            connection = rabbit.connect()
+            alert = alerts.recive()
 
-            queueName = 'alerts'
-
-            channel = connection.channel()
-
-            channel.queue_declare(queue=queueName, durable=True)
-
-            method_frame, header_frame, body = channel.basic_get(queueName, auto_ack=False)
-
-            if method_frame:
-                await alertChannel.send(body.decode())
-
-                channel.basic_ack(method_frame.delivery_tag)
-
-            connection.close()
-
+            if alert:
+                await alertChannel.send(alert["body"])
 
         await asyncio.sleep(2)
 
@@ -81,26 +67,29 @@ async def on_message(message):
 
         serverName = messageArray[0]
 
-        if serverName in servers.getOnlineList():
-            messageArray.pop(0)
-
-            messageBody = " ".join(messageArray)
-
-            queueMessage = {
-                "author_id": message.author.id,
-                "command": messageBody,
-            }
-
-            rabbit.sendMessage(serverName, queueMessage)
-
-            queueResponse = rabbit.reciveMessages(serverName)
-
-            if isinstance(queueResponse, str):
-                queueResponse = json.loads(queueResponse)
-
-            await message.channel.send(queueResponse["body"])
-        else:
+        if serverName not in servers.getOnlineList():
             await message.channel.send("the server is offline or cannot be found")
+            return
+
+        messageArray.pop(0)
+        messageBody = " ".join(messageArray)
+
+        queueMessage = {
+            "author_id": message.author.id,
+            "command": messageBody,
+        }
+
+        if not bot.sendMessage(serverName, queueMessage):
+            await message.channel.send("could not send message to server")
+            return
+
+        queueResponse = server.reciveMessage(serverName)
+
+        if not queueResponse:
+            await message.channel.send("could not get response from server")
+            return
+
+        await message.channel.send(queueResponse["body"])
 
 
 def run():
