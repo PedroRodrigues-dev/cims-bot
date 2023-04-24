@@ -1,9 +1,12 @@
 from configs import broker
+from tools import channels
 
 
 def send(message):
-    return broker.sendMessage("alerts", {"body": message})
+    if channels.getAlert():
+        return broker.sendMessage("alerts", {"body": message})
 
 
 def recive():
-    return broker.reciveMessage("alerts")
+    if channels.getAlert():
+        return broker.reciveMessage("alerts")

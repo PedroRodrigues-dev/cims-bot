@@ -18,4 +18,12 @@ def rabbitPassword():
 
 
 def rabbitHost():
-    return os.getenv("CIMS_BOT_DISCORD_RABBIT_HOST") or "localhost"
+    return os.getenv("CIMS_BOT_RABBIT_HOST") or "localhost"
+
+
+def redisHost():
+    return os.getenv("CIMS_BOT_REDIS_HOST") or "localhost"
+
+
+def redisPort():
+    return int(os.getenv("CIMS_BOT_REDIS_PORT") or "6379")

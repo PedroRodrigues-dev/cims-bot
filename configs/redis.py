@@ -1,7 +1,9 @@
 import redis
 
+from configs.environment import redisHost, redisPort
 
-r = redis.Redis(host="localhost", port=6379, db=0)
+
+r = redis.Redis(host=redisHost(), port=redisPort(), db=0)
 
 
 def setValue(key, value):

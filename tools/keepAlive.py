@@ -1,9 +1,8 @@
-import json
 import threading
 import time
 from configs import broker
 from datetime import datetime
-from tools import serverStatus, servers, alerts, channels
+from tools import serverStatus, servers, alerts
 
 
 lastVerificationTimes = {}
@@ -12,14 +11,8 @@ lastVerificationTimes = {}
 def init():
     broker.purgeQueue("keepAlive")
 
-    t1 = threading.Thread(target=queueReciver)
-    t2 = threading.Thread(target=onlineTimeValidation)
-
-    t1.start()
-    t2.start()
-
-    t1.join()
-    t2.join()
+    threading.Thread(target=queueReciver).start()
+    threading.Thread(target=onlineTimeValidation).start()
 
 
 def queueReciver():
@@ -27,29 +20,28 @@ def queueReciver():
         message = broker.reciveMessage("keepAlive")
 
         if message:
-            status = serverStatus.get(message["serverName"])
+            serverName = message["serverName"]
+            status = serverStatus.get(serverName)
 
-            if status == None or status.decode() != message["status"]:
-                serverStatus.set(message["serverName"], message["status"])
+            if status != message["status"]:
+                alerts.send(f'{serverName} ({message["status"]})')
 
-                if channels.getAlert():
-                    alerts.send(f'{message["serverName"]} ({message["status"]})')
-
-            lastVerificationTimes[message["serverName"]] = datetime.now()
+            serverStatus.set(serverName, message["status"])
+            lastVerificationTimes[serverName] = datetime.now()
 
         time.sleep(1)
 
 
 def onlineTimeValidation():
     while True:
-        for server_name in lastVerificationTimes:
+        for serverName in lastVerificationTimes:
             if (
-                datetime.now() - lastVerificationTimes[server_name]
+                datetime.now() - lastVerificationTimes[serverName]
             ).total_seconds() >= 5:
-                if serverStatus.get(server_name).decode() != "offline":
-                    serverStatus.set(server_name, "offline")
-                    if channels.getAlert():
-                        alerts.send(f"{server_name} (offline)")
+                if serverStatus.get(serverName) != "offline":
+                    alerts.send(f"{serverName} (offline)")
+
+                serverStatus.set(serverName, "offline")
 
         lastVerificationTimes.update(
             {
@@ -58,5 +50,4 @@ def onlineTimeValidation():
                 if server_name not in lastVerificationTimes
             }
         )
-
         time.sleep(1)

@@ -18,15 +18,23 @@ _connection = None
 def getConnection():
     global _connection
 
-    while not _connection or _connection.is_closed:
-        try:
-            _connection = pika.BlockingConnection(_parameters)
-        except pika.exceptions.AMQPConnectionError:
-            _connection = None
-            print("Trying to reconnect with rabbitMQ")
-            time.sleep(systemTimeout())
+    retryLimit = systemTimeout()
+    retries = 0
+    retryWaitTime = 1
 
-    return _connection
+    while retries < retryLimit:
+        if not _connection or _connection.is_closed:
+            try:
+                _connection = pika.BlockingConnection(_parameters)
+            except pika.exceptions.AMQPConnectionError:
+                _connection = None
+                print("Trying to reconnect with rabbitMQ")
+                retries += 1
+                time.sleep(retryWaitTime)
+        else:
+            return _connection
+
+    raise Exception("Failed to connect to RabbitMQ after multiple attempts")
 
 
 def sendMessage(queueName, queueMessage):

@@ -1,4 +1,3 @@
-import json
 from configs import redis
 
 
@@ -27,6 +26,7 @@ def getList():
     )
 
     return result
+
 
 def getNames():
     keys = redis.getKeys("server::status::*")
