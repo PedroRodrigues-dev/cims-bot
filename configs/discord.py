@@ -12,27 +12,6 @@ client = discord.Client(intents=intents)
 _connection = broker.getConnection()
 
 
-async def alert():
-    channel = _connection.channel()
-
-    while True:
-        alertChannelId = channels.getAlert()
-
-        if alertChannelId:
-            channel.queue_declare(queue="alerts", durable=True)
-
-            methodFrame, headerFrame, body = channel.basic_get(
-                queue="alerts", auto_ack=True
-            )
-
-            if methodFrame:
-                body = json.loads(body.decode())
-                alertChannel = client.get_channel(int(alertChannelId.decode()))
-                await alertChannel.send(body["body"])
-
-        await asyncio.sleep(1)
-
-
 async def response():
     channel = _connection.channel()
 
@@ -56,7 +35,6 @@ async def response():
 async def on_ready():
     print(f"We have logged in as {client.user}")
     alerts.send("CIMS-BOT Started")
-    client.loop.create_task(alert())
     client.loop.create_task(response())
 
 
