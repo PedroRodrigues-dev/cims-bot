@@ -2,10 +2,18 @@ version: "3.2"
 
 services:
   # cims:
-  #   image: cims-bot:latest
+  #   image: cims-bot:1.0.0
   #   container_name: cims-bot
   #   environment:
   #     - CIMS_BOT_DISCORD_TOKEN=MTA4NzUyOTkzNzEzMDUwNDI3Mg.GGkyl3.VOBdcX3R_dH_YIfeOXjCyVGv6vxm-jwqmPdVDE
+  #     - CIMS_BOT_RABBIT_USERNAME=guest
+  #     - CIMS_BOT_RABBIT_PASSWORD=guest
+  #     - CIMS_BOT_RABBIT_HOST=localhost
+  #     - CIMS_BOT_REDIS_HOST=localhost
+  #     - CIMS_BOT_REDIS_PORT=6379
+  #   restart: always
+  #   networks:
+  #     - cims
 
   rabbitmq:
     image: rabbitmq:3.11.10-management-alpine
