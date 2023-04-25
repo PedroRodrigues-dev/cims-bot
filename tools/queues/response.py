@@ -1,11 +1,11 @@
 from configs import broker
 
 
-def sendMessage(serverName, authorId, channelId, body):
+def send(authorId, channelId, body):
     message = {
         "authorId": authorId,
         "channelId": channelId,
         "body": body,
     }
 
-    return broker.sendMessage(serverName, message)
+    return broker.sendMessage("responses", message)

@@ -1,24 +1,55 @@
 import asyncio
+import json
 import discord
-from configs.environment import discordToken
-from tools import servers, channels, alerts, commands
+from configs import broker, environment
+from tools import channels, alerts, commands
 
 intents = discord.Intents.default()
 intents.message_content = True
 
 client = discord.Client(intents=intents)
 
+_connection = broker.getConnection()
+
 
 async def alert():
-    while 1:
-        alert = alerts.recive()
+    channel = _connection.channel()
 
-        if alert:
-            alertChannelId = channels.getAlert()
-            alertChannel = client.get_channel(int(alertChannelId.decode()))
-            await alertChannel.send(alert["body"])
+    while True:
+        alertChannelId = channels.getAlert()
 
-        await asyncio.sleep(2)
+        if alertChannelId:
+            channel.queue_declare(queue="alerts", durable=True)
+
+            methodFrame, headerFrame, body = channel.basic_get(
+                queue="alerts", auto_ack=True
+            )
+
+            if methodFrame:
+                body = json.loads(body.decode())
+                alertChannel = client.get_channel(int(alertChannelId.decode()))
+                await alertChannel.send(body["body"])
+
+        await asyncio.sleep(1)
+
+
+async def response():
+    channel = _connection.channel()
+
+    while True:
+        channel.queue_declare(queue="responses", durable=True)
+
+        methodFrame, headerFrame, body = channel.basic_get(
+            queue="responses", auto_ack=True
+        )
+
+        if methodFrame:
+            body = json.loads(body.decode())
+
+            alertChannel = client.get_channel(int(body["channelId"]))
+            await alertChannel.send(body["body"])
+
+        await asyncio.sleep(1)
 
 
 @client.event
@@ -26,25 +57,13 @@ async def on_ready():
     print(f"We have logged in as {client.user}")
     alerts.send("CIMS-BOT Started")
     client.loop.create_task(alert())
+    client.loop.create_task(response())
 
 
 @client.event
 async def on_message(message):
-    if message.author == client.user:
-        return
-
-    if message.content == "#servers-status":
-        await message.channel.send(commands.serversStatus())
-        return
-
-    if message.content == "#set-alert-channel":
-        await message.channel.send(commands.setAlertChannel(message))
-        return
-
-    if message.content.startswith("#"):
-        await message.channel.send(commands.serverCommands(message))
-        return
+    commands.interpreter(client, message)
 
 
 def run():
-    client.run(discordToken())
+    client.run(environment.discordToken())

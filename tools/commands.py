@@ -1,44 +1,63 @@
 from tools import servers, channels
-from tools.queues import bot, server
+from tools.queues import bot, response
 
 
-def serversStatus():
+def interpreter(client, message):
+    if message.author == client.user:
+        return
+
+    if message.content == "#servers-status":
+        serversStatus(message)
+        return
+
+    if message.content == "#set-alert-channel":
+        setAlertChannel(message)
+        return
+
+    if message.content.startswith("#"):
+        serverCommands(message)
+        return
+
+
+def serversStatus(message):
+    authorId = message.author.id
+    channelId = message.channel.id
+    body = "no server registered"
+
     serversList = servers.getList()
 
     if serversList:
-        return serversList
-    else:
-        return "no server registered"
+        body = serversList
+
+    response.send(authorId, channelId, body)
 
 
 def setAlertChannel(message):
+    authorId = message.author.id
+    channelId = message.channel.id
+    body = "now this channel will receive the alerts"
+
     channels.setAlert(message.channel.id)
 
-    return "now this channel will receive the alerts"
+    response.send(authorId, channelId, body)
 
 
 def serverCommands(message):
-    messageArray = message.content.replace("#", "").split(" ")
+    authorId = message.author.id
+    channelId = message.channel.id
 
+    messageArray = message.content.replace("#", "").split(" ")
     serverName = messageArray[0]
 
     if serverName not in servers.getOnlineList():
-        return "the server is offline or cannot be found"
+        body = "the server is offline or cannot be found"
+
+        response.send(authorId, channelId, body)
 
     messageArray.pop(0)
     messageBody = " ".join(messageArray)
 
-    queueMessage = {
-        "author_id": message.author.id,
-        "command": messageBody,
-    }
+    if not bot.sendMessage(serverName, authorId, channelId, messageBody):
+        body = "could not send message to server"
 
-    if not bot.sendMessage(serverName, queueMessage):
-        return "could not send message to server"
-
-    queueResponse = server.reciveMessage(serverName)
-
-    if not queueResponse:
-        return "could not get response from server"
-
-    return queueResponse["body"]
+        response.send(authorId, channelId, body)

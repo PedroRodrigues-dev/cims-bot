@@ -2,7 +2,12 @@ from configs import redis
 
 
 def get(serverName):
-    return redis.getValue(f"server::status::{serverName}").decode()
+    value = redis.getValue(f"server::status::{serverName}")
+
+    if value:
+        value = value.decode()
+
+    return value
 
 
 def set(serverName, status):

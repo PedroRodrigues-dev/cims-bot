@@ -1,35 +1,60 @@
+import json
 import threading
 import time
+
+import pika
 from configs import broker
 from datetime import datetime
+from configs.environment import rabbitHost, rabbitPassword, rabbitUsername
 from tools import serverStatus, servers, alerts
 
 
 lastVerificationTimes = {}
 
+_credentials = pika.PlainCredentials(rabbitUsername(), rabbitPassword())
+_parameters = pika.ConnectionParameters(rabbitHost(), 5672, "/", _credentials)
+
 
 def init():
     broker.purgeQueue("keepAlive")
+
+    lastVerificationTimes.update(
+        {
+            serverName: datetime.now()
+            for serverName in servers.getNames()
+            if serverName not in lastVerificationTimes
+        }
+    )
 
     threading.Thread(target=queueReciver).start()
     threading.Thread(target=onlineTimeValidation).start()
 
 
 def queueReciver():
-    while True:
-        message = broker.reciveMessage("keepAlive")
+    connection = pika.BlockingConnection(_parameters)
+    channel = connection.channel()
 
-        if message:
-            serverName = message["serverName"]
-            status = serverStatus.get(serverName)
+    channel.queue_declare(queue="keepAlive", durable=True)
 
-            if status != message["status"]:
-                alerts.send(f'{serverName} ({message["status"]})')
+    def __callback(ch, method, properties, body):
+        body = json.loads(body.decode())
+        serverName = body["serverName"]
+        status = serverStatus.get(serverName)
 
-            serverStatus.set(serverName, message["status"])
-            lastVerificationTimes[serverName] = datetime.now()
+        if status != body["status"]:
+            alerts.send(f'{serverName} ({body["status"]})')
 
-        time.sleep(1)
+        serverStatus.set(serverName, body["status"])
+        lastVerificationTimes[serverName] = datetime.now()
+
+    channel.basic_consume(
+        queue="keepAlive", on_message_callback=__callback, auto_ack=True
+    )
+
+    channel.start_consuming()
+
+    channel.close()
+    connection.close()
 
 
 def onlineTimeValidation():
@@ -43,11 +68,4 @@ def onlineTimeValidation():
 
                 serverStatus.set(serverName, "offline")
 
-        lastVerificationTimes.update(
-            {
-                server_name: datetime.now()
-                for server_name in servers.getNames()
-                if server_name not in lastVerificationTimes
-            }
-        )
         time.sleep(1)
