@@ -2,7 +2,7 @@ version: "3.2"
 
 services:
   # cims:
-  #   image: cims-bot:1.0.0
+  #   image: cims-bot:1.0.0-alpha
   #   container_name: cims-bot
   #   environment:
   #     - CIMS_BOT_DISCORD_TOKEN=MTA4NzUyOTkzNzEzMDUwNDI3Mg.GGkyl3.VOBdcX3R_dH_YIfeOXjCyVGv6vxm-jwqmPdVDE
