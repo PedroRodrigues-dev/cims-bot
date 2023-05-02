@@ -63,3 +63,27 @@
 2. Run containers:
 
    docker compose up -d
+
+## Build Image
+
+1. Access buildImage.sh:
+
+   change the VERSION variable to your version
+
+2. Run buildImage.sh:
+
+   ./buildImage.sh
+
+3. Write the dockerHub credentials: 1. Acesse buildImage.sh:
+
+   alter VERSION varaible to your version
+
+4. Run buildImage.sh:
+
+   ./buildImage.sh
+
+5. Write dockerHub credentials:
+
+   after compiling the image, docker will ask for the username
+   and password, just type it and press enter and the image will
+   be sent to the dockerHub
