@@ -74,7 +74,7 @@
 
    ./buildImage.sh
 
-3. Write the dockerHub credentials: 1. Acesse buildImage.sh:
+3. Write the dockerHub credentials:
 
    alter VERSION varaible to your version
 
