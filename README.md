@@ -70,19 +70,15 @@
 
    change the VERSION variable to your version
 
-2. Run buildImage.sh:
-
-   ./buildImage.sh
-
-3. Write the dockerHub credentials:
+2. Write the dockerHub credentials:
 
    alter VERSION varaible to your version
 
-4. Run buildImage.sh:
+3. Run buildImage.sh:
 
    ./buildImage.sh
 
-5. Write dockerHub credentials:
+4. Write dockerHub credentials:
 
    after compiling the image, docker will ask for the username
    and password, just type it and press enter and the image will
