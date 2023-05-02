@@ -1,19 +1,21 @@
-version: "3.2"
+version: "3.9"
+name: "cims"
 
 services:
   # cims:
-  #   image: cims-bot:1.0.0-alpha
+  #   image: 123pedrosilva123/cims-bot:1.0.0-alpha
   #   container_name: cims-bot
   #   environment:
-  #     - CIMS_BOT_DISCORD_TOKEN=MTA4NzUyOTkzNzEzMDUwNDI3Mg.GGkyl3.VOBdcX3R_dH_YIfeOXjCyVGv6vxm-jwqmPdVDE
+  #     - CIMS_BOT_DISCORD_TOKEN=token
   #     - CIMS_BOT_RABBIT_USERNAME=guest
   #     - CIMS_BOT_RABBIT_PASSWORD=guest
-  #     - CIMS_BOT_RABBIT_HOST=localhost
-  #     - CIMS_BOT_REDIS_HOST=localhost
+  #     - CIMS_BOT_RABBIT_HOST=rabbitmq
+  #     - CIMS_BOT_REDIS_HOST=redis
   #     - CIMS_BOT_REDIS_PORT=6379
   #   restart: always
-  #   networks:
-  #     - cims
+  #   depends_on:
+  #     - rabbitmq
+  #     - redis
 
   rabbitmq:
     image: rabbitmq:3.11.10-management-alpine
@@ -22,8 +24,6 @@ services:
       - 5672:5672
       - 15672:15672
     restart: always
-    networks:
-      - cims
 
   redis:
     image: redis:7.2-rc-bullseye
@@ -31,9 +31,3 @@ services:
     ports:
       - 6379:6379
     restart: always
-    networks:
-      - cims
-
-networks:
-  cims:
-    driver: bridge
