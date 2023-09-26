@@ -1,8 +1,9 @@
+import os
 from tools import servers, channels
 from tools.queues import bot, response
 
 
-def interpreter(client, message):
+async def interpreter(client, message):
     if message.author == client.user:
         return
 
@@ -12,6 +13,10 @@ def interpreter(client, message):
 
     if message.content == "#set-alert-channel":
         setAlertChannel(message)
+        return
+
+    if message.content.startswith("#define-routine"):
+        await defineRoutine(message)
         return
 
     if message.content.startswith("#"):
@@ -40,6 +45,44 @@ def setAlertChannel(message):
     channels.setAlert(message.channel.id)
 
     response.send(authorId, channelId, body)
+
+
+async def defineRoutine(message):
+    authorId = message.author.id
+    channelId = message.channel.id
+
+    if not message.attachments:
+        response.send(
+            authorId,
+            channelId,
+            "you need to send a file to define a routine",
+        )
+        return
+
+    for attachment in message.attachments:
+        if not attachment.filename.endswith(".tila"):
+            response.send(
+                authorId,
+                channelId,
+                f"{attachment.filename} - Invalid file type, only TimeLang scripts are accepted",
+            )
+            return
+
+        fileContent = await attachment.read()
+
+        messageArray = message.content.split(" ")
+        serverName = messageArray[1]
+
+        messageBody = {
+            "code": fileContent.decode(),
+        }
+
+        body = f"{attachment.filename} - Accepted"
+
+        if not bot.sendMessage(serverName, authorId, channelId, messageBody):
+            body = "could not send message to server"
+
+        response.send(authorId, channelId, body)
 
 
 def serverCommands(message):

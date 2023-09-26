@@ -40,7 +40,7 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    commands.interpreter(client, message)
+    await commands.interpreter(client, message)
 
 
 def run():
