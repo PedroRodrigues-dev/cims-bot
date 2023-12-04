@@ -3,7 +3,7 @@ name: "cims"
 
 services:
   # cims:
-  #   image: 123pedrosilva123/cims-bot:1.0.0-alpha
+  #   image: 123pedrosilva123/cims-bot:1.1.0-alpha
   #   container_name: cims-bot
   #   environment:
   #     - CIMS_BOT_DISCORD_TOKEN=token
